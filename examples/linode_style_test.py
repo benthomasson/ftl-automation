@@ -39,6 +39,10 @@ def main():
         print("✓ Tool assignment pattern works!")
         print(f"Available tools: {list(ftl.tools.keys())}")
         
+        # Test NEW direct calling pattern
+        print("\n=== Testing Direct Tool Calls ===")
+        ftl.debug_tool(message="Direct call to debug_tool works!")
+        
         # Test user input (with default to avoid blocking)
         try:
             server_name = "test-server-01"  # Simulate user input
@@ -46,8 +50,9 @@ def main():
         except:
             server_name = "default-server"
         
-        # Test debug output
-        debug_tool("Testing debug functionality")
+        # Test debug output (both patterns)
+        debug_tool("Testing debug functionality - variable pattern")
+        ftl.debug_tool(message="Testing debug functionality - direct pattern")
         
         # Test module execution  
         try:

@@ -9,12 +9,16 @@ from rich.console import Console
 class ToolsProxy:
     """Proxy object that allows tool access via attribute notation."""
     
-    def __init__(self, tools_dict):
+    def __init__(self, tools_dict, context):
         self._tools = tools_dict
+        self._context = context
     
     def __getattr__(self, name):
         if name in self._tools:
-            return self._tools[name]
+            # Return a wrapped function that includes context
+            def tool_wrapper(**kwargs):
+                return self._context.execute_tool(name, **kwargs)
+            return tool_wrapper
         raise AttributeError(f"Tool '{name}' not found")
     
     def __contains__(self, name):
@@ -48,7 +52,7 @@ class AutomationContext:
         self.inventory = inventory
         self.modules = modules 
         self._tools_dict = tools
-        self.tools = ToolsProxy(tools)  # Enable ftl.tools.tool_name syntax
+        self.tools = ToolsProxy(tools, self)  # Enable ftl.tools.tool_name syntax
         self.localhost = localhost
         self.extra_vars = extra_vars or {}
         self.console = console or Console()
@@ -62,13 +66,13 @@ class AutomationContext:
     
     def get_tool(self, name: str):
         """Get a tool by name."""
-        return self.tools.get(name)
+        return self._tools_dict.get(name)
     
-    def execute_tool(self, name: str, **kwargs):
+    def execute_tool(self, tool_name: str, **kwargs):
         """Execute a tool with given arguments."""
-        tool = self.get_tool(name)
+        tool = self.get_tool(tool_name)
         if tool is None:
-            raise ValueError(f"Tool '{name}' not found")
+            raise ValueError(f"Tool '{tool_name}' not found")
         
         # Execute tool function with context
         return tool(
@@ -77,8 +81,17 @@ class AutomationContext:
             console=self.console,
             gate_cache=self.gate_cache,
             use_gate=self.use_gate,
+            secrets=self.secrets,
             **kwargs
         )
+    
+    def __getattr__(self, name: str):
+        """Allow direct tool calls like ftl.bash(...) instead of ftl.execute_tool('bash', ...)"""
+        if name in self._tools_dict:
+            def tool_wrapper(**kwargs):
+                return self.execute_tool(name, **kwargs)
+            return tool_wrapper
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
     
     def run_module(self, module_name: str, **module_args):
         """Execute an FTL module."""
