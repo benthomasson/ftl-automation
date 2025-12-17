@@ -45,6 +45,8 @@ def automation(
     tools: Optional[List[str]] = None,
     tools_files: Optional[List[str]] = None,
     extra_vars: Optional[Dict[str, Any]] = None,
+    secrets: Optional[List[str]] = None,
+    user_input: Optional[str] = None,
     **kwargs
 ):
     """
@@ -56,6 +58,8 @@ def automation(
         tools: List of tool names to load
         tools_files: List of tool files to load
         extra_vars: Additional variables
+        secrets: List of secret names to load from environment
+        user_input: Path to user input file
         **kwargs: Additional context variables
         
     Yields:
@@ -63,6 +67,8 @@ def automation(
     """
     from .context import AutomationContext
     from .tools import load_tools_from_files, load_tools_by_name
+    from .builtin_tools import get_builtin_tools
+    import os
     
     # Load inventory
     if isinstance(inventory, str):
@@ -73,8 +79,19 @@ def automation(
     # Load modules
     mods = load_modules(modules or ['modules'])
     
+    # Load secrets from environment
+    secrets_dict = {}
+    if secrets:
+        for secret_name in secrets:
+            secrets_dict[secret_name] = os.environ.get(secret_name)
+    
     # Load tools
     tool_instances = {}
+    
+    # Add built-in tools
+    tool_instances.update(get_builtin_tools())
+    
+    # Load from files
     if tools_files:
         tool_instances.update(load_tools_from_files(tools_files))
     if tools:
@@ -87,6 +104,8 @@ def automation(
         tools=tool_instances,
         localhost=ftl.localhost,
         extra_vars=extra_vars or {},
+        secrets=secrets_dict,
+        user_input=user_input,
         **kwargs
     )
     
