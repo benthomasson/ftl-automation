@@ -1,0 +1,20 @@
+[project]
+name = "ftl-automation"
+version = "0.1.0"
+description = "Pure Python automation library built on Faster Than Light"
+dependencies = [
+    "faster_than_light",
+    "rich",
+    "pyyaml",
+    "click",
+]
+
+[tool.setuptools]
+packages = ["ftl_automation"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+ftl-automation = "ftl_automation.cli:main"
