@@ -3,6 +3,8 @@ Core automation functions and context management.
 """
 
 import os
+import asyncio
+from threading import Thread
 from typing import Dict, Any, List, Optional
 from contextlib import contextmanager
 import faster_than_light as ftl
@@ -82,6 +84,12 @@ def automation(
         for secret_name in secrets:
             secrets_dict[secret_name] = os.environ.get(secret_name)
 
+    # Set up asyncio event loop for FTL gate cache
+    gate_cache = {}
+    loop = asyncio.new_event_loop()
+    thread = Thread(target=loop.run_forever, daemon=True)
+    thread.start()
+
     # Load tools
     tool_instances = {}
 
@@ -94,6 +102,8 @@ def automation(
         extra_vars=extra_vars or {},
         secrets=secrets_dict,
         user_input=user_input,
+        gate_cache=gate_cache,
+        loop=loop,
         **kwargs
     )
 
@@ -103,6 +113,13 @@ def automation(
     try:
         yield context
     finally:
+        # Cleanup event loop
+        try:
+            loop.call_soon_threadsafe(loop.stop)
+            thread.join(timeout=1.0)  # Give thread time to stop gracefully
+        except:
+            pass  # Ignore cleanup errors
+        
         # Cleanup if needed
         if hasattr(context, "cleanup"):
             context.cleanup()
