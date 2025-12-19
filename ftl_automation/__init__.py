@@ -9,7 +9,9 @@ from .tools import load_tool, execute_tool, load_tools_from_files, load_tools_by
 from .context import AutomationContext
 from .builtin_tools import (
     user_input_tool, input_tool, complete, impossible,
-    CompletionException, ImpossibleException
+    CompletionException, ImpossibleException,
+    UserInputTool, CompleteTool, ImpossibleTool, DebugTool,
+    get_builtin_tool_classes
 )
 from .tool_base import AutomationTool, create_tool_function
 
@@ -32,5 +34,10 @@ __all__ = [
     "complete",
     "impossible",
     "CompletionException",
-    "ImpossibleException"
+    "ImpossibleException",
+    "UserInputTool",
+    "CompleteTool", 
+    "ImpossibleTool",
+    "DebugTool",
+    "get_builtin_tool_classes"
 ]
