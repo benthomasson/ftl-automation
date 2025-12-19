@@ -44,6 +44,7 @@ class AutomationContext:
         extra_vars: Optional[Dict[str, Any]] = None,
         console: Optional[Console] = None,
         secrets: Optional[Dict[str, str]] = None,
+        inventory_file: Optional[str] = None,
         **kwargs,
     ):
         self.inventory = inventory
@@ -54,6 +55,7 @@ class AutomationContext:
         self.extra_vars = extra_vars or {}
         self.console = console or Console()
         self.secrets = secrets or {}
+        self.inventory_file = inventory_file
         self.gate_cache = {}
         self.use_gate = kwargs.get("use_gate", False)
 

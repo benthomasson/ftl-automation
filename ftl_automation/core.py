@@ -83,8 +83,10 @@ def automation(
 
     # Load inventory
     if isinstance(inventory, str):
+        inventory_file_path = inventory
         inv = load_inventory(inventory)
     else:
+        inventory_file_path = None
         inv = inventory
 
     # Load modules
@@ -114,6 +116,7 @@ def automation(
         extra_vars=extra_vars or {},
         secrets=secrets_dict,
         user_input=user_input,
+        inventory_file=inventory_file_path,
         gate_cache=gate_cache,
         loop=loop,
         **kwargs
