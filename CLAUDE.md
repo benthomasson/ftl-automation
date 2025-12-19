@@ -29,6 +29,9 @@ ftl-automation --inventory inventory.yml --tools hostname,dnf
 # Execute specific module
 ftl-automation --inventory inventory.yml --module-name command --module-args "cmd=uptime"
 
+# Use custom tool packages
+ftl-automation --inventory inventory.yml --tool-packages my_tools.automation --tools my_tool
+
 # Load tools from files
 ftl-automation --tools-files my_tools.py --inventory hosts.yml
 ```
@@ -44,7 +47,7 @@ ftl-automation --tools-files my_tools.py --inventory hosts.yml
 3. **Tool System** (`ftl_automation/tool_base.py:12`): 
    - `AutomationTool` base class for creating automation tools
    - Tools are callable objects that receive automation context
-   - Loaded dynamically from `ftl_tools.tools.{tool_name}` packages
+   - Loaded dynamically from configurable package sources (defaults to `ftl_tools.tools.{tool_name}`)
 
 4. **Module Execution** (`ftl_automation/core.py:143`): Direct FTL module execution through `run_module()` function, wrapping `ftl.run_module_sync()`.
 
@@ -79,7 +82,8 @@ class MyTool(AutomationTool):
 ```
 
 ### Tool Loading Locations
-- Primary: `ftl_tools.tools.{tool_name}` packages
+- Configurable via `tool_packages` parameter (defaults to `["ftl_tools.tools"]`)
+- Multiple packages can be specified, searched in order until tool is found
 - Tools must have `name` attribute matching the requested tool name
 - Tool classes instantiated with `AutomationContext` parameter
 
@@ -91,6 +95,7 @@ import ftl_automation
 
 with ftl_automation.automation(
     tools=["hostname", "dnf", "service"],
+    tool_packages=["ftl_tools.tools", "my_custom_tools"],
     inventory="inventory.yml",
     secrets=["LINODE_TOKEN"]
 ) as ftl:

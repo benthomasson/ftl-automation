@@ -45,6 +45,7 @@ class AutomationContext:
         console: Optional[Console] = None,
         secrets: Optional[Dict[str, str]] = None,
         inventory_file: Optional[str] = None,
+        tool_packages: Optional[List[str]] = None,
         **kwargs,
     ):
         self.inventory = inventory
@@ -56,6 +57,7 @@ class AutomationContext:
         self.console = console or Console()
         self.secrets = secrets or {}
         self.inventory_file = inventory_file
+        self.tool_packages = tool_packages or ["ftl_tools.tools"]
         self.gate_cache = {}
         self.use_gate = kwargs.get("use_gate", False)
 

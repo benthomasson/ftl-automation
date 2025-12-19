@@ -13,6 +13,7 @@ from .core import automation, run_module
     "--modules", "-m", multiple=True, default=["modules"], help="Module directories"
 )
 @click.option("--tools", "-t", multiple=True, help="Tools to load")
+@click.option("--tool-packages", "-p", multiple=True, help="Package names to search for tools")
 @click.option("--tools-files", "-f", multiple=True, help="Tool files to load")
 @click.option("--module-name", "-n", help="Module name to execute")
 @click.option("--module-args", "-a", help="Module arguments as key=value pairs")
@@ -21,6 +22,7 @@ def main(
     inventory: str,
     modules: List[str],
     tools: List[str],
+    tool_packages: List[str],
     tools_files: List[str],
     module_name: str,
     module_args: str,
@@ -47,6 +49,7 @@ def main(
         inventory=inventory,
         modules=list(modules),
         tools=list(tools),
+        tool_packages=list(tool_packages) if tool_packages else None,
         tools_files=list(tools_files),
         extra_vars=parsed_extra_vars,
     ) as ftl:

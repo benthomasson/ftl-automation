@@ -55,6 +55,7 @@ def automation(
     inventory: str,
     modules: Optional[List[str]] = None,
     tools: Optional[List[str]] = None,
+    tool_packages: Optional[List[str]] = None,
     extra_vars: Optional[Dict[str, Any]] = None,
     secrets: Optional[List[str]] = None,
     user_input: Optional[str] = None,
@@ -67,6 +68,7 @@ def automation(
         inventory: Path to inventory file or inventory dict
         modules: List of module paths
         tools: List of tool names to load
+        tool_packages: List of package names to search for tools (defaults to ["ftl_tools.tools"])
         extra_vars: Additional variables
         secrets: List of secret names to load from environment
         user_input: Path to user input file
@@ -98,6 +100,10 @@ def automation(
         for secret_name in secrets:
             secrets_dict[secret_name] = os.environ.get(secret_name)
 
+    # Set default tool packages if none provided
+    if tool_packages is None:
+        tool_packages = ["ftl_tools.tools"]
+
     # Set up asyncio event loop for FTL gate cache
     gate_cache = {}
     loop = asyncio.new_event_loop()
@@ -117,13 +123,14 @@ def automation(
         secrets=secrets_dict,
         user_input=user_input,
         inventory_file=inventory_file_path,
+        tool_packages=tool_packages,
         gate_cache=gate_cache,
         loop=loop,
         **kwargs
     )
 
     if tools:
-        tool_instances.update(load_tools_by_name(tools, context))
+        tool_instances.update(load_tools_by_name(tools, context, tool_packages))
 
     try:
         yield context
