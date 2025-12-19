@@ -13,12 +13,20 @@ import faster_than_light as ftl
 def load_inventory(inventory_path: str) -> Dict[str, Any]:
     """Load FTL inventory from file.
 
+    If the inventory file doesn't exist, create an empty one.
+
     Args:
         inventory_path: Path to inventory file
 
     Returns:
         Loaded inventory dictionary
     """
+    if not os.path.exists(inventory_path):
+        # Create an empty inventory file
+        os.makedirs(os.path.dirname(inventory_path), exist_ok=True)
+        with open(inventory_path, 'w') as f:
+            f.write('{}\n')
+    
     return ftl.load_inventory(inventory_path)
 
 
