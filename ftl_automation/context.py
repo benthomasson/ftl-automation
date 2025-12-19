@@ -38,7 +38,7 @@ class AutomationContext:
     def __init__(
         self,
         inventory: Dict[str, Any],
-        modules: Dict[str, Any],
+        modules: List[str],
         tools: Dict[str, Any],
         localhost: Any,
         extra_vars: Optional[Dict[str, Any]] = None,

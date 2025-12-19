@@ -20,22 +20,22 @@ def load_inventory(inventory_path: str) -> Dict[str, Any]:
     return ftl.load_inventory(inventory_path)
 
 
-def load_modules(module_paths: List[str]) -> Dict[str, Any]:
+def load_modules(module_paths: List[str]) -> List[str]:
     """Load FTL modules from paths.
 
     Args:
         module_paths: List of paths containing modules
 
     Returns:
-        Dictionary of loaded modules
+        List of module paths (FTL expects module paths, not loaded modules)
     """
-    modules = {}
+    # FTL expects module paths as strings, not loaded module objects
+    # Filter to only existing paths
+    existing_paths = []
     for path in module_paths:
         if os.path.exists(path):
-            # Add logic to load modules from path
-            # This would need to be implemented based on FTL's module loading
-            pass
-    return modules
+            existing_paths.append(path)
+    return existing_paths
 
 
 @contextmanager
@@ -110,7 +110,7 @@ def automation(
 
 def run_module(
     inventory: Dict[str, Any],
-    modules: Dict[str, Any],
+    modules: List[str],
     module_name: str,
     module_args: Dict[str, Any],
     gate_cache: Optional[Dict] = None,
