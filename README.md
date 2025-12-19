@@ -4,20 +4,18 @@ A pure Python automation library built on Faster Than Light, extracted from ftl-
 
 ## Overview
 
-FTL Automation provides a simple, function-based interface for infrastructure automation tasks. It combines the power of FTL's automation engine with a clean Python API for loading tools, managing inventories, and executing automation tasks.
+FTL Automation provides a simple, clean interface for infrastructure automation tasks. It combines the power of FTL's automation engine with an intuitive Python API for provisioning infrastructure, configuring systems, and managing automation workflows.
 
 ## Features
 
-- **Pure Python**: No AI or agent framework dependencies
+- **Pure Python**: No AI or agent framework dependencies  
 - **FTL Integration**: Built on the proven Faster Than Light automation engine
-- **Multiple Tool Syntaxes**: Direct calling (`ftl.tool_name()`), tool assignment (`ftl.tools.tool_name`), and explicit execution
-- **Built-in Tools**: Essential automation tools included (user_input_tool, complete, impossible, debug_tool)
-- **Secrets Management**: Environment variable loading and secure credential handling
-- **ftl-automation-agent Compatibility**: Supports exact patterns from AI-generated scripts
-- **Tool Loading**: Dynamic loading of automation tools from files or by name
-- **Context Management**: Clean context management for automation sessions
-- **Rich Output**: Beautiful console output using Rich
-- **Simple API**: Function-based interface, easy to use and extend
+- **Direct Tool Calling**: Clean `ftl.tool_name()` syntax for all operations
+- **Comprehensive Tools**: Full suite of automation tools for system management
+- **Infrastructure Provisioning**: Built-in support for cloud providers like Linode
+- **Secrets Management**: Secure environment variable loading
+- **Inventory Management**: Automatic inventory file creation and updates
+- **Rich Output**: Beautiful console output and progress tracking
 
 ## Installation
 
@@ -28,220 +26,112 @@ pip install -e .
 
 ## Quick Start
 
-### Basic Usage
+Here's a complete example that provisions a server, configures it, and sends a notification:
 
 ```python
+#!/usr/bin/env python3
 import ftl_automation
 
-# Load and execute automation tasks
 with ftl_automation.automation(
+    tools=[
+        "linode", "hostname", "dnf", "user", 
+        "authorized_key", "lineinfile", "service", "slack"
+    ],
     inventory="inventory.yml",
     modules=["modules"],
-    tools=["bash", "copy", "service"]
+    secrets=["SLACK_TOKEN", "LINODE_TOKEN", "LINODE_ROOT_PASS"],
 ) as ftl:
+
+    # Provision infrastructure
+    ftl.linode(name="web-server-1", ltype="g6-standard-1", image="linode/fedora43")
     
-    # Run an FTL module directly
-    result = ftl.run_module("command", cmd="uptime")
+    # Configure system
+    ftl.hostname(name="web-server-1")
+    ftl.dnf(name="*", state="latest")  # Update all packages
     
-    # Execute tools using direct syntax (NEW!)
-    ftl.bash(script="/path/to/script.sh", user="root")
+    # Create user and setup SSH
+    ftl.user(name="deploy", group="wheel")
+    ftl.authorized_key(user="deploy", key_file=".ssh/id_rsa.pub")
     
-    # Or use the original method
-    ftl.execute_tool("bash", script="/path/to/script.sh", user="root")
-```
-
-### Loading Tools
-
-```python
-import ftl_automation
-
-# Load tools from files
-tools = ftl_automation.load_tools_from_files(["my_tools.py"])
-
-# Load specific tools by name
-tools = ftl_automation.load_tools_by_name(["bash", "copy"])
-
-# Use in automation context - Multiple syntax options!
-with ftl_automation.automation(inventory="hosts.yml") as ftl:
-    
-    # Direct calling (cleanest syntax)
-    result = ftl.my_tool(param1="value")
-    
-    # Tool assignment (ftl-automation-agent compatible)
-    my_tool = ftl.tools.my_tool
-    result = my_tool(param1="value")
-    
-    # Explicit execution
-    result = ftl.execute_tool("my_tool", param1="value")
-```
-
-### Direct Module Execution
-
-```python
-import ftl_automation
-
-inventory = ftl_automation.load_inventory("inventory.yml")
-modules = ftl_automation.load_modules(["modules"])
-
-# Execute module directly
-result = ftl_automation.run_module(
-    inventory=inventory,
-    modules=modules,
-    module_name="service",
-    module_args={"name": "nginx", "state": "started"}
-)
-```
-
-## Tool Syntax Patterns
-
-FTL Automation supports multiple ways to call tools for maximum flexibility:
-
-### 1. Direct Calling (Recommended)
-```python
-with ftl_automation.automation(inventory="hosts.yml") as ftl:
-    # Clean, concise syntax
-    ftl.debug_tool(message="Starting deployment")
-    result = ftl.deploy_service(name="nginx", state="started")
-    ftl.user_input_tool(question="Continue? (y/n)")
-    ftl.complete(message="Deployment finished")
-```
-
-### 2. Tool Assignment (ftl-automation-agent Compatible)
-```python
-with ftl_automation.automation(inventory="hosts.yml") as ftl:
-    # Exact same pattern as AI-generated scripts
-    debug_tool = ftl.tools.debug_tool
-    deploy_service = ftl.tools.deploy_service
-    user_input_tool = ftl.tools.user_input_tool
-    complete = ftl.tools.complete
-    
-    debug_tool(message="Starting deployment")
-    result = deploy_service(name="nginx", state="started")
-    user_input_tool(question="Continue? (y/n)")
-    complete(message="Deployment finished")
-```
-
-### 3. Explicit Execution
-```python
-with ftl_automation.automation(inventory="hosts.yml") as ftl:
-    # Explicit method calls
-    ftl.execute_tool("debug_tool", message="Starting deployment")
-    result = ftl.execute_tool("deploy_service", name="nginx", state="started")
-```
-
-### Built-in Tools
-
-Essential automation tools are included automatically:
-- `user_input_tool(question, default=None)` - Interactive user prompts
-- `complete(message)` - Signal successful task completion  
-- `impossible(reason)` - Signal task cannot be completed
-- `debug_tool(message)` - Debug output with timestamps
-- `get_secret(name)` - Access secrets from environment/context
-
-## CLI Usage
-
-```bash
-# Execute a module
-ftl-automation --inventory hosts.yml --module-name service --module-args "name=nginx,state=started"
-
-# Load tools and run interactively  
-ftl-automation --inventory hosts.yml --tools bash,copy,service
-
-# Load tools from files
-ftl-automation --tools-files my_tools.py --inventory hosts.yml
-```
-
-## Architecture
-
-### Core Components
-
-- **`automation()` context manager**: Main entry point for automation sessions
-- **`AutomationContext`**: Manages state, inventory, modules, and tools
-- **Tool loading**: Dynamic loading from files or by name
-- **FTL integration**: Direct access to Faster Than Light automation engine
-
-### Tool Functions
-
-Tools are simple Python functions that receive automation context:
-
-```python
-def my_automation_tool(inventory, modules, console, **kwargs):
-    """Custom automation tool."""
-    console.print("[blue]Running my tool...[/blue]")
-    
-    # Use FTL to execute modules
-    result = run_module(
-        inventory=inventory,
-        modules=modules,
-        module_name="command",
-        module_args={"cmd": "echo hello"}
+    # Secure SSH configuration
+    ftl.lineinfile(
+        path="/etc/ssh/sshd_config",
+        line="PasswordAuthentication no",
+        regexp=r"^PasswordAuthentication.*"
     )
+    ftl.service(name="sshd", state="restarted")
     
-    console.print(f"[green]Result: {result}[/green]")
-    return result
+    # Send notification
+    ftl.slack(msg="Server web-server-1 provisioned and configured successfully!")
 ```
 
-## Migration from ftl-automation-agent
+## Available Tools
 
-### Automatic Compatibility
-Existing ftl-automation-agent generated scripts work **without any changes**! 
+FTL Automation includes a comprehensive suite of tools for system management:
 
-```python
-# This ftl-automation-agent pattern works unchanged:
-with ftl_automation.automation(
-    tools=("linode_tool", "dnf_tool", "user_input_tool", "complete"),
-    inventory="inventory.yml",
-    secrets=("LINODE_TOKEN", "LINODE_ROOT_PASS"),
-) as ftl:
-    
-    linode_tool = ftl.tools.linode_tool
-    user_input_tool = ftl.tools.user_input_tool
-    complete = ftl.tools.complete
-    
-    server_name = user_input_tool(question="Enter server name:")
-    created = linode_tool(name=server_name, image="linode/fedora41")
-    complete("Server created successfully")
-```
+### Infrastructure & Cloud
+- `linode(name, ltype, image)` - Provision Linode servers
+- `hostname(name)` - Set system hostname
 
-### Optional Syntax Improvements
-For new scripts, you can use the cleaner direct syntax:
+### Package Management  
+- `dnf(name, state)` - Manage packages on Fedora/RHEL systems
+- `apt(update_cache, upgrade)` - Manage packages on Debian/Ubuntu systems
+- `pip(name, state)` - Manage Python packages
 
-```python
-# Modernized version with direct calling:
-with ftl_automation.automation(
-    tools=("linode_tool", "dnf_tool"),
-    inventory="inventory.yml", 
-    secrets=("LINODE_TOKEN", "LINODE_ROOT_PASS"),
-) as ftl:
-    
-    server_name = ftl.user_input_tool(question="Enter server name:")
-    created = ftl.linode_tool(name=server_name, image="linode/fedora41")
-    ftl.complete(message="Server created successfully")
-```
+### User & Access Management
+- `user(name, group)` - Create and manage system users
+- `authorized_key(user, key_file, state)` - Manage SSH authorized keys
 
-## Comparison with ftl-automation-agent
+### File & Directory Operations
+- `copy(src, dest)` - Copy files to remote systems
+- `lineinfile(path, line, regexp, state)` - Manage lines in configuration files
+- `chown(user, location)` - Change file ownership
+- `get_url(url, dest)` - Download files from URLs
 
-| Feature | ftl-automation-agent | ftl-automation |
-|---------|---------------------|----------------|
-| AI Integration | ✅ smolagents | ❌ None |
-| Code Generation | ✅ Python/YAML | ❌ None |
-| Agent Framework | ✅ Complex | ❌ None |
-| Script Compatibility | ✅ Generates scripts | ✅ **Runs same scripts** |
-| Tool Interface | 🔧 Class-based | 🔧 Function-based + Direct calling |
-| Syntax Options | 🔧 1 pattern | 🔧 **3 patterns** |
-| Dependencies | 📦 Many | 📦 Minimal |
-| Complexity | 🧠 High | 🧠 Low |
-| Use Case | AI-driven automation | Direct automation |
+### System Services
+- `service(name, state)` - Manage system services (start/stop/restart)
+- `systemd_service(name, state, enabled)` - Manage systemd services
+- `firewalld(port, state, protocol, permanent)` - Configure firewall rules
 
-## Summary
+### System Configuration
+- `swapfile(location, size, permanent)` - Create and manage swap files
 
-**ftl-automation** provides the best of both worlds:
-- **Drop-in compatibility** with ftl-automation-agent generated scripts
-- **Improved syntax options** for cleaner, more maintainable automation code  
-- **Pure Python** implementation without AI complexity or dependencies
-- **All the power** of the Faster Than Light automation engine
+### Communication
+- `slack(msg, channel)` - Send Slack notifications
 
-Whether you're migrating from AI-generated scripts or building new automation from scratch, ftl-automation provides a flexible, powerful, and easy-to-use foundation for infrastructure automation tasks.
+## Key Concepts
+
+### Inventory Management
+- **Automatic Creation**: Inventory files are created automatically if they don't exist
+- **Dynamic Updates**: Tools like `linode` automatically add new hosts to inventory
+- **YAML Format**: Simple YAML structure for host definitions
+
+### Secrets Management
+- **Environment Variables**: Secrets loaded securely from environment variables
+- **No Hardcoding**: Credentials never appear in code
+- **Multiple Providers**: Support for various cloud provider tokens
+
+### Module System
+- **FTL Modules**: Built on proven Faster Than Light automation modules
+- **Ansible Compatible**: Uses Ansible-compatible modules under the hood
+- **Extensible**: Easy to add custom modules
+
+## Use Cases
+
+- **Infrastructure Provisioning**: Spin up cloud servers and configure them
+- **System Configuration**: Manage services, users, and system settings  
+- **Security Hardening**: Configure SSH, firewalls, and access controls
+- **Application Deployment**: Deploy and manage applications and services
+- **Monitoring Setup**: Configure monitoring and alerting systems
+
+## Getting Started
+
+1. **Install**: `pip install -e .` 
+2. **Set secrets**: Export required environment variables (e.g., `LINODE_TOKEN`)
+3. **Write script**: Use the example above as a starting point
+4. **Run**: Execute your Python script
+
+FTL Automation makes infrastructure automation simple, reliable, and maintainable.
 
 ## License
 
