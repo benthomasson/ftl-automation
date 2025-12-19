@@ -65,7 +65,6 @@ def automation(
     """
     from .context import AutomationContext
     from .tools import load_tools_by_name
-    from .builtin_tools import get_builtin_tools
     import os
 
     # Load inventory
