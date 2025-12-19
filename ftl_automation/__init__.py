@@ -11,6 +11,7 @@ from .builtin_tools import (
     user_input_tool, input_tool, complete, impossible,
     CompletionException, ImpossibleException
 )
+from .tool_base import AutomationTool, create_tool_function
 
 __version__ = "0.1.0"
 
@@ -24,6 +25,8 @@ __all__ = [
     "load_tools_from_files",
     "load_tools_by_name", 
     "AutomationContext",
+    "AutomationTool",
+    "create_tool_function",
     "user_input_tool",
     "input_tool", 
     "complete",
