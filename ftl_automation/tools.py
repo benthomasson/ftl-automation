@@ -30,7 +30,7 @@ def load_tools_by_name(
             module = importlib.import_module(module_path)
 
             for name, obj in inspect.getmembers(module):
-                if inspect.isclass(obj) and getattr(obj, 'name', None) == tool_name:
+                if inspect.isclass(obj) and getattr(obj, "name", None) == tool_name:
                     tools[f"{tool_name}"] = obj(context)
 
         except ImportError as e:

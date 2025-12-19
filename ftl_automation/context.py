@@ -2,7 +2,7 @@
 Automation context and state management.
 """
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from rich.console import Console
 
 
