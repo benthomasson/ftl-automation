@@ -10,10 +10,10 @@ import faster_than_light as ftl
 
 def load_inventory(inventory_path: str) -> Dict[str, Any]:
     """Load FTL inventory from file.
-    
+
     Args:
         inventory_path: Path to inventory file
-        
+
     Returns:
         Loaded inventory dictionary
     """
@@ -22,10 +22,10 @@ def load_inventory(inventory_path: str) -> Dict[str, Any]:
 
 def load_modules(module_paths: List[str]) -> Dict[str, Any]:
     """Load FTL modules from paths.
-    
+
     Args:
         module_paths: List of paths containing modules
-        
+
     Returns:
         Dictionary of loaded modules
     """
@@ -43,7 +43,6 @@ def automation(
     inventory: str,
     modules: Optional[List[str]] = None,
     tools: Optional[List[str]] = None,
-    tools_files: Optional[List[str]] = None,
     extra_vars: Optional[Dict[str, Any]] = None,
     secrets: Optional[List[str]] = None,
     user_input: Optional[str] = None,
@@ -51,17 +50,16 @@ def automation(
 ):
     """
     Automation context manager that provides a configured environment.
-    
+
     Args:
         inventory: Path to inventory file or inventory dict
         modules: List of module paths
         tools: List of tool names to load
-        tools_files: List of tool files to load
         extra_vars: Additional variables
         secrets: List of secret names to load from environment
         user_input: Path to user input file
         **kwargs: Additional context variables
-        
+
     Yields:
         AutomationContext object with loaded resources
     """
@@ -69,34 +67,25 @@ def automation(
     from .tools import load_tools_from_files, load_tools_by_name
     from .builtin_tools import get_builtin_tools
     import os
-    
+
     # Load inventory
     if isinstance(inventory, str):
         inv = load_inventory(inventory)
     else:
         inv = inventory
-        
+
     # Load modules
-    mods = load_modules(modules or ['modules'])
-    
+    mods = load_modules(modules or ["modules"])
+
     # Load secrets from environment
     secrets_dict = {}
     if secrets:
         for secret_name in secrets:
             secrets_dict[secret_name] = os.environ.get(secret_name)
-    
+
     # Load tools
     tool_instances = {}
-    
-    # Add built-in tools
-    tool_instances.update(get_builtin_tools())
-    
-    # Load from files
-    if tools_files:
-        tool_instances.update(load_tools_from_files(tools_files))
-    if tools:
-        tool_instances.update(load_tools_by_name(tools))
-    
+
     # Create context
     context = AutomationContext(
         inventory=inv,
@@ -108,18 +97,21 @@ def automation(
         user_input=user_input,
         **kwargs
     )
-    
+
+    if tools:
+        tool_instances.update(load_tools_by_name(tools, context))
+
     try:
         yield context
     finally:
         # Cleanup if needed
-        if hasattr(context, 'cleanup'):
+        if hasattr(context, "cleanup"):
             context.cleanup()
 
 
 def run_module(
     inventory: Dict[str, Any],
-    modules: Dict[str, Any], 
+    modules: Dict[str, Any],
     module_name: str,
     module_args: Dict[str, Any],
     gate_cache: Optional[Dict] = None,
@@ -128,7 +120,7 @@ def run_module(
 ) -> Any:
     """
     Execute an FTL module with given parameters.
-    
+
     Args:
         inventory: FTL inventory
         modules: Available modules
@@ -137,7 +129,7 @@ def run_module(
         gate_cache: Optional gate cache for connection reuse
         use_gate: Whether to use FTL gates
         **kwargs: Additional arguments passed to FTL
-        
+
     Returns:
         Module execution results
     """

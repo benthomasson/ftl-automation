@@ -64,27 +64,10 @@ def demo_class_based_tools():
         inventory=test_inventory
     ) as ftl:
         
-        # Create tool class instances
-        debug_tool = ftl_automation.DebugTool(
-            ftl.inventory, 
-            ftl.modules, 
-            ftl.console,
-            **ftl.context
-        )
-        
-        user_input_tool = ftl_automation.UserInputTool(
-            ftl.inventory,
-            ftl.modules, 
-            ftl.console,
-            **ftl.context
-        )
-        
-        complete_tool = ftl_automation.CompleteTool(
-            ftl.inventory,
-            ftl.modules,
-            ftl.console, 
-            **ftl.context
-        )
+        # Create tool class instances with AutomationContext
+        debug_tool = ftl_automation.DebugTool(ftl)
+        user_input_tool = ftl_automation.UserInputTool(ftl)
+        complete_tool = ftl_automation.CompleteTool(ftl)
         
         print("\n1. Debug Tool (Class-based):")
         debug_tool(message="Starting class-based demo")
@@ -127,12 +110,7 @@ def demo_mixed_usage():
         ftl.debug_tool(message="Using function-based debug")
         
         # Create a class instance for repeated use
-        user_input = ftl_automation.UserInputTool(
-            ftl.inventory,
-            ftl.modules,
-            ftl.console,
-            **ftl.context
-        )
+        user_input = ftl_automation.UserInputTool(ftl)
         
         print("\nGathering information...")
         hobby = user_input(question="What's your favorite hobby?", default="Programming")
