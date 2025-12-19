@@ -23,7 +23,9 @@ def load_inventory(inventory_path: str) -> Dict[str, Any]:
     """
     if not os.path.exists(inventory_path):
         # Create an empty inventory file
-        os.makedirs(os.path.dirname(inventory_path), exist_ok=True)
+        dir_path = os.path.dirname(inventory_path)
+        if dir_path:
+            os.makedirs(dir_path, exist_ok=True)
         with open(inventory_path, 'w') as f:
             f.write('{}\n')
     
@@ -76,6 +78,8 @@ def automation(
     from .context import AutomationContext
     from .tools import load_tools_by_name
     import os
+
+    print(f"{inventory=}")
 
     # Load inventory
     if isinstance(inventory, str):
