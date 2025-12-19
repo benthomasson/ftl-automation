@@ -64,7 +64,7 @@ def automation(
         AutomationContext object with loaded resources
     """
     from .context import AutomationContext
-    from .tools import load_tools_from_files, load_tools_by_name
+    from .tools import load_tools_by_name
     from .builtin_tools import get_builtin_tools
     import os
 
