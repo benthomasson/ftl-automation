@@ -15,11 +15,7 @@ class ToolsProxy:
 
     def __getattr__(self, name):
         if name in self._tools:
-            # Return a wrapped function that includes context
-            def tool_wrapper(**kwargs):
-                return self._context.execute_tool(name, **kwargs)
-
-            return tool_wrapper
+            return self.tools[name]
         raise AttributeError(f"Tool '{name}' not found")
 
     def __contains__(self, name):
@@ -69,31 +65,10 @@ class AutomationContext:
         """Get a tool by name."""
         return self._tools_dict.get(name)
 
-    def execute_tool(self, tool_name: str, **kwargs):
-        """Execute a tool with given arguments."""
-        tool = self.get_tool(tool_name)
-        if tool is None:
-            raise ValueError(f"Tool '{tool_name}' not found")
-
-        # Execute tool function with context
-        return tool(
-            inventory=self.inventory,
-            modules=self.modules,
-            console=self.console,
-            gate_cache=self.gate_cache,
-            use_gate=self.use_gate,
-            secrets=self.secrets,
-            **kwargs,
-        )
-
     def __getattr__(self, name: str):
-        """Allow direct tool calls like ftl.bash(...) instead of ftl.execute_tool('bash', ...)"""
+        """Allow direct tool calls like ftl.bash(...)"""
         if name in self._tools_dict:
-
-            def tool_wrapper(**kwargs):
-                return self.execute_tool(name, **kwargs)
-
-            return tool_wrapper
+            return self._tools_dict[name]
         raise AttributeError(
             f"'{self.__class__.__name__}' object has no attribute '{name}'"
         )
