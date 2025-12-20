@@ -79,6 +79,7 @@ def automation(
     """
     from .context import AutomationContext
     from .tools import load_tools_by_name
+    from .builtin_tools import get_builtin_tools
     import os
 
     print(f"{inventory=}")
@@ -112,6 +113,9 @@ def automation(
 
     # Load tools
     tool_instances = {}
+    
+    # Add builtin tools
+    tool_instances.update(get_builtin_tools())
 
     # Create context
     context = AutomationContext(
