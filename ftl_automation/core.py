@@ -111,17 +111,11 @@ def automation(
     thread = Thread(target=loop.run_forever, daemon=True)
     thread.start()
 
-    # Load tools
-    tool_instances = {}
-    
-    # Add builtin tools
-    tool_instances.update(get_builtin_tools())
-
-    # Create context
+    # Create context first (without tools)
     context = AutomationContext(
         inventory=inv,
         modules=mods,
-        tools=tool_instances,
+        tools={},  # Start empty, will add tools after context creation
         localhost=ftl.localhost,
         extra_vars=extra_vars or {},
         secrets=secrets_dict,
@@ -133,8 +127,20 @@ def automation(
         **kwargs
     )
 
+    # Load tools
+    tool_instances = {}
+    
+    # Add builtin tools (instantiate classes with context)
+    builtin_tool_classes = get_builtin_tools()
+    for name, tool_class in builtin_tool_classes.items():
+        tool_instances[name] = tool_class(context)
+
+    # Load additional tools
     if tools:
         tool_instances.update(load_tools_by_name(tools, context, tool_packages))
+    
+    # Update context with all loaded tools
+    context._tools_dict.update(tool_instances)
 
     try:
         yield context
