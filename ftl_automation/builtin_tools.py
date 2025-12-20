@@ -10,16 +10,7 @@ from typing import Dict, Any, Optional
 from rich.prompt import Prompt
 
 from .tool_base import AutomationTool
-
-
-class CompletionException(Exception):
-    """Exception raised to signal successful task completion."""
-    pass
-
-
-class ImpossibleException(Exception):
-    """Exception raised to signal that a task is impossible to complete."""
-    pass
+from .exceptions import CompletionException, ImpossibleException
 
 
 # ==============================================================================

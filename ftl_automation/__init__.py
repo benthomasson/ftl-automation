@@ -8,8 +8,8 @@ from .core import automation, load_inventory, load_modules, run_module
 from .tools import load_tools_by_name
 from .context import AutomationContext
 from .tool_base import AutomationTool
+from .exceptions import CompletionException, ImpossibleException
 from .builtin_tools import (
-    CompletionException, ImpossibleException,
     UserInputTool, CompleteTool, ImpossibleTool, DebugTool,
     get_builtin_tools, get_builtin_tool_classes
 )

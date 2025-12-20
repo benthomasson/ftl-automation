@@ -8,6 +8,7 @@ from threading import Thread
 from typing import Dict, Any, List, Optional
 from contextlib import contextmanager
 import faster_than_light as ftl
+from .exceptions import CompletionException
 
 
 def load_inventory(inventory_path: str) -> Dict[str, Any]:
@@ -144,6 +145,9 @@ def automation(
 
     try:
         yield context
+    except CompletionException:
+        # This is expected - the automation completed successfully
+        pass
     finally:
         # Cleanup event loop
         try:
