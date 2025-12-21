@@ -120,7 +120,7 @@ def automation(
         localhost=ftl.localhost,
         extra_vars=extra_vars or {},
         secrets=secrets_dict,
-        user_input=user_input,
+        user_input_file=user_input,
         inventory_file=inventory_file_path,
         tool_packages=tool_packages,
         gate_cache=gate_cache,

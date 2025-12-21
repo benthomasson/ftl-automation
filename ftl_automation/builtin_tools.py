@@ -20,7 +20,7 @@ from .exceptions import CompletionException, ImpossibleException
 class UserInputTool(AutomationTool):
     """AutomationTool class for user input prompts."""
     
-    name = "user_input_tool"
+    name = "user_input"
     description = "Prompt user for input during automation execution"
     
     def __init__(self, context):
@@ -75,7 +75,7 @@ class ImpossibleTool(AutomationTool):
 class DebugTool(AutomationTool):
     """AutomationTool class for debug output."""
     
-    name = "debug_tool"
+    name = "debug"
     description = "Print debug message during automation"
     
     def __init__(self, context):
@@ -99,10 +99,10 @@ def get_builtin_tools() -> Dict[str, callable]:
     """
     # Return the tool classes that will be instantiated with context
     return {
-        'user_input_tool': UserInputTool,
+        'user_input': UserInputTool,
         'complete': CompleteTool,
         'impossible': ImpossibleTool, 
-        'debug_tool': DebugTool,
+        'debug': DebugTool,
     }
 
 
@@ -114,8 +114,8 @@ def get_builtin_tool_classes() -> Dict[str, type]:
         Dictionary mapping tool names to AutomationTool classes
     """
     return {
-        'user_input_tool': UserInputTool,
+        'user_input': UserInputTool,
         'complete': CompleteTool,
         'impossible': ImpossibleTool,
-        'debug_tool': DebugTool,
+        'debug': DebugTool,
     }
