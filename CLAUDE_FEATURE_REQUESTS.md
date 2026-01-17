@@ -10,20 +10,21 @@ Based on real-world usage of ftl-automation and ftl-tools for complex automation
 - ✅ **Dry Run Mode** - Comprehensive implementation with context/operation-level control and universal tool support
 - ✅ **Consistent Parameter Naming** - File operations standardized across all tools
 
-**🚧 PARTIALLY COMPLETED** (1/10):
-- 🚧 **Parameter Validation & Error Messages** - Help system provides parameter validation, but runtime validation not yet implemented
+**🚧 PARTIALLY COMPLETED** (0/10):
+- (No partially completed features remaining)
 
-**📋 PENDING** (5/10):
+**📋 PENDING** (6/10):
 - 📋 **Better Error Handling for Missing Files** - Medium priority
 - 📋 **Inventory Management Helpers** - Medium priority
+- 📋 **Parameter Validation & Error Messages** - Low priority (runtime validation for typos)
 - 📋 **Tool Chaining/Pipeline Support** - Low priority
 - 📋 **Tool Parameter Auto-completion** - Low priority
 - 📋 **Better Module Path Handling** - Low priority
 
 ## 1. Parameter Validation & Error Messages
 
-**Priority**: High  
-**Status**: 🚧 **PARTIALLY COMPLETED** - Help system provides parameter discovery, runtime validation pending
+**Priority**: Low  
+**Status**: 🚧 **PARTIALLY COMPLETED** - Help system provides parameter discovery, runtime validation now low priority due to consistent naming
 **Problem**: Tools fail with cryptic parameter errors that require trial-and-error debugging.
 
 ```python
@@ -382,10 +383,9 @@ class AutomationContext:
 
 ## Implementation Priority
 
-### ✅ Phase 1 (High Priority - Core UX) - LARGELY COMPLETE
-1. ~~**Parameter Validation & Error Messages**~~ - 🚧 Help system provides parameter discovery, runtime validation pending
-2. ~~**Consistent Parameter Naming**~~ - ✅ **COMPLETED** - File operations standardized
-3. ~~**Dry Run Mode**~~ - ✅ **COMPLETED** - Comprehensive implementation across all tools
+### ✅ Phase 1 (High Priority - Core UX) - COMPLETE
+1. ~~**Consistent Parameter Naming**~~ - ✅ **COMPLETED** - File operations standardized
+2. ~~**Dry Run Mode**~~ - ✅ **COMPLETED** - Comprehensive implementation across all tools
 
 ### ✅ Phase 2 (Medium Priority - Developer Experience) - PARTIALLY COMPLETE  
 4. ~~**Tool Help System**~~ - ✅ **COMPLETED** - Comprehensive help system implemented
@@ -394,12 +394,13 @@ class AutomationContext:
 7. ~~**Enhanced Tool Discovery**~~ - ✅ **COMPLETED** - `list_available_tools()` and `show_tools()`
 
 ### 📋 Phase 3 (Low Priority - Nice to Have) - PENDING
-8. **Tool Chaining/Pipeline Support** - 📋 **PENDING** - Advanced workflows
-9. **Parameter Auto-completion** - 📋 **PENDING** - Polish
-10. **Better Module Discovery** - 📋 **PENDING** - Convenience
+8. **Parameter Validation & Error Messages** - 📋 **PENDING** - Runtime validation for typos (downgraded from high priority)
+9. **Tool Chaining/Pipeline Support** - 📋 **PENDING** - Advanced workflows
+10. **Parameter Auto-completion** - 📋 **PENDING** - Polish
+11. **Better Module Discovery** - 📋 **PENDING** - Convenience
 
 ### 🎯 Next Recommended Implementation
-**High Priority**: **Parameter Validation & Error Messages** - Would complete Phase 1 and provide better developer experience with helpful error messages for common parameter mistakes.
+**Medium Priority**: **Better Error Handling for Missing Files** - Would improve debugging experience by providing helpful suggestions when file operations fail due to missing source files.
 
 ## Impact Assessment
 
@@ -418,12 +419,12 @@ class AutomationContext:
 - ✅ **Runtime documentation** - No need to check source code for parameter names
 - ✅ **Comprehensive dry run mode** - `--dry-run` flag enables safe preview of all operations
 
-### 📋 **Still To Address (5/10 remaining)**:
-- 📋 Manual parameter validation errors → Runtime validation needed
-- 📋 Repetitive cloud provisioning patterns → Inventory helpers needed
+### 📋 **Still To Address (6/10 remaining)**:
 - 📋 File operation error debugging → Better error messages needed
+- 📋 Repetitive cloud provisioning patterns → Inventory helpers needed  
+- 📋 Runtime parameter typo validation → Low priority due to consistent naming
 - 📋 Advanced workflow patterns → Tool chaining/pipeline support needed  
 - 📋 Development convenience features → Parameter auto-completion and better module discovery
 
 ### 🎯 **Next High Impact**: 
-**Parameter Validation & Error Messages** would complete Phase 1 core UX improvements and provide immediate feedback for common parameter mistakes, eliminating the trial-and-error debugging that was a major pain point during Minecraft automation development.
+**Better Error Handling for Missing Files** would improve the debugging experience by providing helpful suggestions when file operations fail, reducing trial-and-error debugging for copy/template operations.
