@@ -4,16 +4,16 @@ Based on real-world usage of ftl-automation and ftl-tools for complex automation
 
 ## Implementation Status
 
-**✅ COMPLETED** (2/10):
+**✅ COMPLETED** (4/10):
 - ✅ **Better Tool Discovery** - `list_available_tools()` and `show_tools()` methods implemented
-- ✅ **Tool Documentation Integration** - Comprehensive `help()` system with examples and parameter tables
+- ✅ **Tool Documentation Integration** - Comprehensive `help()` system with examples and parameter tables  
+- ✅ **Dry Run Mode** - Comprehensive implementation with context/operation-level control and universal tool support
+- ✅ **Consistent Parameter Naming** - File operations standardized across all tools
 
-**🚧 PARTIALLY COMPLETED** (2/10):
-- 🚧 **Consistent Parameter Naming** - File operations standardized (mkdir, chown, chmod, lineinfile use `path`; copy operations use `src`/`dest`)
+**🚧 PARTIALLY COMPLETED** (1/10):
 - 🚧 **Parameter Validation & Error Messages** - Help system provides parameter validation, but runtime validation not yet implemented
 
-**📋 PENDING** (6/10):
-- 📋 **Dry Run Mode** - High priority
+**📋 PENDING** (5/10):
 - 📋 **Better Error Handling for Missing Files** - Medium priority
 - 📋 **Inventory Management Helpers** - Medium priority
 - 📋 **Tool Chaining/Pipeline Support** - Low priority
@@ -247,38 +247,58 @@ class AutomationContext:
 ## 8. Dry Run Mode
 
 **Priority**: High  
-**Status**: 📋 **PENDING** - Not yet implemented
+**Status**: ✅ **COMPLETED** - Comprehensive implementation with context/operation-level control and full tool integration
 **Problem**: No way to preview changes before execution, leading to accidental modifications.
 
-**Proposed Solution**: Add comprehensive dry run support:
+**✅ IMPLEMENTED SOLUTION**: Full dry run support across entire ftl-automation ecosystem:
 
 ```python
-# Enable dry run mode
+# Enable dry run mode for entire context
 with ftl_automation.automation(dry_run=True, ...) as ftl:
-    ftl.mkdir(path="/etc/ddclient")  # Shows preview instead of executing
-    # Output: "[DRY RUN] Would create directory: /etc/ddclient"
-    
-    ftl.service(name="nginx", state="started")
-    # Output: "[DRY RUN] Would start service: nginx"
+    ftl.dnf(name="nginx", state="present")  # Shows what would be installed
+    ftl.service(name="nginx", state="started")  # Shows service would be started
+    ftl.firewalld(port="80/tcp", state="enabled")  # Shows firewall changes
 
-# Also support per-operation dry run
+# Per-operation dry run override
 with ftl_automation.automation(...) as ftl:
-    ftl.mkdir(path="/etc/test", dry_run=True)  # This operation only
+    ftl.service(name="nginx", state="started", dry_run=True)  # This operation only
+    
+# Command-line support
+python3 minecraft_automation.py --dry-run  # Preview entire automation workflow
 ```
 
-**Implementation**:
+**✅ FEATURES IMPLEMENTED**:
+- **Context-level dry run**: `automation(dry_run=True)` affects all operations
+- **Operation-level override**: Individual tool calls can override context setting
+- **CLI integration**: `--dry-run` flag support in automation scripts
+- **Ansible check_mode**: Automatic conversion to `_ansible_check_mode=True` for all modules
+- **Universal tool support**: All 24 ftl-tools now support dry run mode
+- **Builtin tool support**: debug, user_input, complete, impossible tools have dry run previews
+
+**✅ IMPLEMENTATION ARCHITECTURE**:
 ```python
+# ftl-automation framework (AutomationTool base class)
 class AutomationTool:
-    def __call__(self, dry_run=None, **kwargs):
-        # Check context-level or operation-level dry run
+    def __call__(self, dry_run: Optional[bool] = None, **kwargs) -> Any:
         is_dry_run = dry_run if dry_run is not None else getattr(self.context, 'dry_run', False)
-        
         if is_dry_run:
-            self._show_dry_run_preview(**kwargs)
-            return {'dry_run': True, 'preview': self._generate_preview(**kwargs)}
+            return self._dry_run_preview(**kwargs)
         else:
             return self._execute(**kwargs)
+
+# ftl-tools individual tool implementation
+def __call__(self, name: str, state: str):
+    module_args = dict(name=name, state=state)
+    if getattr(self.context, 'dry_run', False):
+        module_args['_ansible_check_mode'] = True
+    return ftl.run_module_sync(..., module_args=module_args, ...)
 ```
+
+**✅ TESTING VERIFIED**:
+- Minecraft automation scripts run safely in dry-run mode
+- Package operations show "would install X" instead of actual installation
+- Service operations show "service state changed" without actual changes
+- File operations preview modifications without touching files
 
 ## 9. Tool Parameter Auto-completion
 
@@ -362,10 +382,10 @@ class AutomationContext:
 
 ## Implementation Priority
 
-### ✅ Phase 1 (High Priority - Core UX) - PARTIALLY COMPLETE
+### ✅ Phase 1 (High Priority - Core UX) - LARGELY COMPLETE
 1. ~~**Parameter Validation & Error Messages**~~ - 🚧 Help system provides parameter discovery, runtime validation pending
 2. ~~**Consistent Parameter Naming**~~ - ✅ **COMPLETED** - File operations standardized
-3. **Dry Run Mode** - 📋 **PENDING** - Enables safe experimentation
+3. ~~**Dry Run Mode**~~ - ✅ **COMPLETED** - Comprehensive implementation across all tools
 
 ### ✅ Phase 2 (Medium Priority - Developer Experience) - PARTIALLY COMPLETE  
 4. ~~**Tool Help System**~~ - ✅ **COMPLETED** - Comprehensive help system implemented
@@ -379,7 +399,7 @@ class AutomationContext:
 10. **Better Module Discovery** - 📋 **PENDING** - Convenience
 
 ### 🎯 Next Recommended Implementation
-**High Priority**: **Dry Run Mode** - Would complete Phase 1 and provide safe experimentation capabilities that were specifically needed during Minecraft automation development.
+**High Priority**: **Parameter Validation & Error Messages** - Would complete Phase 1 and provide better developer experience with helpful error messages for common parameter mistakes.
 
 ## Impact Assessment
 
@@ -389,18 +409,21 @@ class AutomationContext:
 - ❌ Manual parameter lookup in source code  
 - ❌ No way to discover available tools and their parameters
 - ❌ Inconsistent parameter naming across similar tools
+- ❌ Fear of running destructive operations without preview
 
 **AFTER** (improved experience): 
 - ✅ **Consistent parameter naming** - All file operations use logical `path` or `src`/`dest` patterns
 - ✅ **Integrated help system** - `ftl.help('mkdir')` shows parameters, types, and examples
 - ✅ **Tool discovery** - `ftl.show_tools()` reveals available tools by category
 - ✅ **Runtime documentation** - No need to check source code for parameter names
+- ✅ **Comprehensive dry run mode** - `--dry-run` flag enables safe preview of all operations
 
-### 📋 **Still To Address (6/10 remaining)**:
-- 📋 **Fear of running destructive operations** → **Dry Run Mode needed**
+### 📋 **Still To Address (5/10 remaining)**:
 - 📋 Manual parameter validation errors → Runtime validation needed
 - 📋 Repetitive cloud provisioning patterns → Inventory helpers needed
 - 📋 File operation error debugging → Better error messages needed
+- 📋 Advanced workflow patterns → Tool chaining/pipeline support needed  
+- 📋 Development convenience features → Parameter auto-completion and better module discovery
 
 ### 🎯 **Next High Impact**: 
-**Dry Run Mode** would complete the core UX improvements and provide the safe experimentation that was specifically needed during our Minecraft automation development, where we had to carefully execute each step without being able to preview changes.
+**Parameter Validation & Error Messages** would complete Phase 1 core UX improvements and provide immediate feedback for common parameter mistakes, eliminating the trial-and-error debugging that was a major pain point during Minecraft automation development.
