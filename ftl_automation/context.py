@@ -248,6 +248,252 @@ class AutomationContext:
         if not detailed and tools_info:
             self.console.print("\n[dim]Use show_tools(detailed=True) to see parameter details[/dim]")
 
+    def help(self, tool_name: Optional[str] = None, category: Optional[str] = None):
+        """
+        Display help information for tools.
+        
+        Args:
+            tool_name: Specific tool to show help for
+            category: Show all tools in a specific category
+        """
+        if tool_name:
+            self._show_tool_help(tool_name)
+        elif category:
+            self._show_category_help(category)
+        else:
+            self._show_general_help()
+    
+    def _show_tool_help(self, tool_name: str):
+        """Show detailed help for a specific tool."""
+        tools_info = self.list_available_tools()
+        
+        if tool_name not in tools_info:
+            self.console.print(f"[red]Tool '{tool_name}' not found[/red]")
+            
+            # Suggest similar tools
+            available_tools = list(tools_info.keys())
+            similar_tools = [t for t in available_tools if tool_name.lower() in t.lower() or t.lower() in tool_name.lower()]
+            
+            if similar_tools:
+                self.console.print(f"[yellow]Did you mean: {', '.join(similar_tools)}?[/yellow]")
+            else:
+                self.console.print(f"[dim]Available tools: {', '.join(sorted(available_tools))}[/dim]")
+            return
+        
+        tool_info = tools_info[tool_name]
+        
+        # Display tool header
+        self.console.print(f"\n[bold cyan]{tool_name}[/bold cyan] - {tool_info['description']}")
+        self.console.print(f"[dim]Category: {tool_info['category']}[/dim]")
+        
+        if tool_info.get('module') and tool_info['module'] != 'builtin':
+            self.console.print(f"[dim]Module: {tool_info['module']}[/dim]")
+        
+        # Display parameters
+        parameters = tool_info['parameters']
+        if parameters:
+            self.console.print(f"\n[bold]Parameters:[/bold]")
+            
+            # Create parameters table
+            param_table = Table(show_header=True, header_style="bold magenta")
+            param_table.add_column("Parameter", style="cyan")
+            param_table.add_column("Type", style="green")
+            param_table.add_column("Required", style="yellow")
+            param_table.add_column("Default", style="blue")
+            
+            for param in parameters:
+                param_name = param['name']
+                param_type = param.get('type', 'any')
+                required = "Yes" if param.get('required', True) else "No"
+                default = str(param.get('default', '')) if 'default' in param else ''
+                
+                param_table.add_row(param_name, param_type, required, default)
+            
+            self.console.print(param_table)
+        else:
+            self.console.print(f"\n[dim]No parameters required[/dim]")
+        
+        # Show usage example
+        self._show_usage_example(tool_name, tool_info)
+    
+    def _show_usage_example(self, tool_name: str, tool_info: Dict[str, Any]):
+        """Generate and display a usage example for the tool."""
+        parameters = tool_info['parameters']
+        
+        if not parameters:
+            example = f"ftl.{tool_name}()"
+        else:
+            # Generate example parameters based on tool type and name
+            example_params = []
+            for param in parameters:
+                param_name = param['name']
+                param_type = param.get('type', 'str')
+                
+                if 'default' in param:
+                    # Skip optional parameters with defaults for cleaner examples
+                    continue
+                
+                # Generate realistic example values based on parameter name and type
+                example_value = self._generate_example_value(tool_name, param_name, param_type)
+                if param_type == 'str':
+                    example_params.append(f'{param_name}="{example_value}"')
+                else:
+                    example_params.append(f'{param_name}={example_value}')
+            
+            example = f"ftl.{tool_name}({', '.join(example_params)})"
+        
+        self.console.print(f"\n[bold]Example:[/bold]")
+        self.console.print(f"[green]{example}[/green]")
+    
+    def _generate_example_value(self, tool_name: str, param_name: str, param_type: str) -> str:
+        """Generate realistic example values for tool parameters."""
+        # Parameter name-based examples
+        if param_name in ['name', 'hostname']:
+            if tool_name == 'user':
+                return 'myuser'
+            elif tool_name == 'hostname':
+                return 'web-server'
+            elif tool_name in ['service', 'systemd_service']:
+                return 'nginx'
+            elif tool_name == 'dnf':
+                return 'python3'
+            else:
+                return 'example-name'
+        
+        elif param_name in ['path', 'dest', 'location']:
+            if tool_name == 'mkdir':
+                return '/opt/myapp'
+            elif tool_name in ['copy', 'template']:
+                return '/etc/myapp/config.conf'
+            elif tool_name == 'get_url':
+                return '/tmp/download.tar.gz'
+            else:
+                return '/path/to/file'
+        
+        elif param_name in ['src', 'source']:
+            if tool_name == 'copy':
+                return 'config.conf'
+            elif tool_name == 'template':
+                return 'template.j2'
+            else:
+                return 'source/file'
+        
+        elif param_name == 'url':
+            return 'https://example.com/file.tar.gz'
+        
+        elif param_name in ['state']:
+            if tool_name in ['service', 'systemd_service']:
+                return 'started'
+            elif tool_name in ['dnf', 'apt', 'pip']:
+                return 'present'
+            else:
+                return 'present'
+        
+        elif param_name in ['group', 'owner']:
+            if param_name == 'group':
+                return 'wheel'
+            else:
+                return 'root'
+        
+        elif param_name == 'user':
+            return 'myuser'
+        
+        elif param_name in ['msg', 'message']:
+            return 'Hello, deployment complete!'
+        
+        elif param_name == 'channel':
+            return '#general'
+        
+        elif param_name in ['port']:
+            return '80/tcp'
+        
+        elif param_name == 'size':
+            return '1024'  # For swapfile size in MB
+        
+        elif param_name in ['question']:
+            return 'Do you want to continue?'
+        
+        # Type-based fallbacks
+        elif param_type == 'bool':
+            return 'True'
+        elif param_type == 'int':
+            return '1024'
+        else:
+            return 'example-value'
+    
+    def _show_category_help(self, category: str):
+        """Show help for all tools in a specific category."""
+        tools_info = self.list_available_tools(category=category)
+        
+        if not tools_info:
+            available_categories = set(info['category'] for info in self.list_available_tools().values())
+            self.console.print(f"[red]Category '{category}' not found[/red]")
+            self.console.print(f"[dim]Available categories: {', '.join(sorted(available_categories))}[/dim]")
+            return
+        
+        self.console.print(f"\n[bold]{category.title()} Tools[/bold]")
+        self.console.print("=" * 50)
+        
+        for tool_name in sorted(tools_info.keys()):
+            tool_info = tools_info[tool_name]
+            self.console.print(f"\n[cyan]{tool_name}[/cyan]: {tool_info['description']}")
+            
+            # Show brief parameter info
+            parameters = tool_info['parameters']
+            if parameters:
+                required_params = [p['name'] for p in parameters if p.get('required', True)]
+                optional_params = [p['name'] for p in parameters if not p.get('required', True)]
+                
+                param_info = []
+                if required_params:
+                    param_info.append(f"required: {', '.join(required_params)}")
+                if optional_params:
+                    param_info.append(f"optional: {', '.join(optional_params)}")
+                
+                if param_info:
+                    self.console.print(f"  [dim]Parameters: {' | '.join(param_info)}[/dim]")
+        
+        self.console.print(f"\n[dim]Use ftl.help('{sorted(tools_info.keys())[0]}') for detailed help on a specific tool[/dim]")
+    
+    def _show_general_help(self):
+        """Show general help with overview of all tools and categories."""
+        tools_info = self.list_available_tools()
+        
+        self.console.print("\n[bold]FTL-Automation Help[/bold]")
+        self.console.print("=" * 50)
+        
+        if not tools_info:
+            self.console.print("[yellow]No tools are currently loaded[/yellow]")
+            self.console.print("Load tools using: automation(tools=['tool1', 'tool2'], ...)")
+            return
+        
+        # Show summary by category
+        categories = {}
+        for tool_name, tool_info in tools_info.items():
+            category = tool_info['category']
+            if category not in categories:
+                categories[category] = []
+            categories[category].append(tool_name)
+        
+        self.console.print(f"[bold]Available Tools ({len(tools_info)} total)[/bold]")
+        
+        for category in sorted(categories.keys()):
+            tools_in_category = sorted(categories[category])
+            self.console.print(f"\n[magenta]{category.title()}[/magenta] ({len(tools_in_category)} tools):")
+            # Show tools in columns
+            tools_per_line = 4
+            for i in range(0, len(tools_in_category), tools_per_line):
+                line_tools = tools_in_category[i:i + tools_per_line]
+                formatted_tools = [f"[cyan]{tool}[/cyan]" for tool in line_tools]
+                self.console.print(f"  {' '.join(formatted_tools)}")
+        
+        # Show usage instructions
+        self.console.print(f"\n[bold]Usage:[/bold]")
+        self.console.print("  [green]ftl.help('tool_name')[/green]     - Show detailed help for a specific tool")
+        self.console.print("  [green]ftl.help(category='file')[/green] - Show all tools in a category")
+        self.console.print("  [green]ftl.show_tools()[/green]         - Show tools in a formatted table")
+        self.console.print("  [green]ftl.show_tools(detailed=True)[/green] - Show tools with parameter details")
+
     def cleanup(self):
         """Cleanup resources."""
         # Close any open gates
