@@ -60,6 +60,7 @@ def automation(
     extra_vars: Optional[Dict[str, Any]] = None,
     secrets: Optional[List[str]] = None,
     user_input: Optional[str] = None,
+    dry_run: bool = False,
     **kwargs
 ):
     """
@@ -72,6 +73,7 @@ def automation(
         tool_packages: List of package names to search for tools (defaults to ["ftl_tools.tools"])
         extra_vars: Additional variables
         secrets: List of secret names to load from environment
+        dry_run: Enable dry run mode (preview changes without executing)
         user_input: Path to user input file
         **kwargs: Additional context variables
 
@@ -123,6 +125,7 @@ def automation(
         user_input_file=user_input,
         inventory_file=inventory_file_path,
         tool_packages=tool_packages,
+        dry_run=dry_run,
         gate_cache=gate_cache,
         loop=loop,
         **kwargs
@@ -168,6 +171,7 @@ def run_module(
     module_args: Dict[str, Any],
     gate_cache: Optional[Dict] = None,
     use_gate: bool = False,
+    dry_run: bool = False,
     **kwargs
 ) -> Any:
     """
@@ -180,11 +184,18 @@ def run_module(
         module_args: Arguments for the module
         gate_cache: Optional gate cache for connection reuse
         use_gate: Whether to use FTL gates
+        dry_run: Enable dry run mode (converted to check_mode for Ansible modules)
         **kwargs: Additional arguments passed to FTL
 
     Returns:
         Module execution results
     """
+    # Convert dry_run to check_mode for Ansible modules
+    if dry_run:
+        # Create a copy to avoid modifying the original
+        module_args = module_args.copy()
+        module_args['_ansible_check_mode'] = True
+    
     return ftl.run_module_sync(
         inventory,
         modules,

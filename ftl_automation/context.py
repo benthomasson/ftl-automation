@@ -48,6 +48,7 @@ class AutomationContext:
         secrets: Optional[Dict[str, str]] = None,
         inventory_file: Optional[str] = None,
         tool_packages: Optional[List[str]] = None,
+        dry_run: bool = False,
         **kwargs,
     ):
         self.inventory = inventory
@@ -60,6 +61,7 @@ class AutomationContext:
         self.secrets = secrets or {}
         self.inventory_file = inventory_file
         self.tool_packages = tool_packages or ["ftl_tools.tools"]
+        self.dry_run = dry_run
         self.gate_cache = {}
         self.use_gate = kwargs.get("use_gate", False)
 
@@ -90,6 +92,7 @@ class AutomationContext:
             module_args,
             gate_cache=self.gate_cache,
             use_gate=self.use_gate,
+            dry_run=self.dry_run,
         )
 
     def print(self, *args, **kwargs):

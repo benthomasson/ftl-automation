@@ -27,9 +27,29 @@ class UserInputTool(AutomationTool):
         """Initialize with AutomationContext."""
         self.context = context
 
-    def __call__(self, question: str, default: Optional[str] = None):
+    def _execute(self, question: str, default: Optional[str] = None):
         """Prompt user for input during automation execution."""
         return Prompt.ask(question, default=default)
+    
+    def _dry_run_preview(self, question: str, default: Optional[str] = None):
+        """Generate dry run preview for user input."""
+        preview = f"[DRY RUN] Would prompt: '{question}'"
+        if default:
+            preview += f" (default: {default})"
+            simulated_response = default
+        else:
+            simulated_response = "<user input required>"
+        
+        self.context.console.print(f"[cyan]{preview}[/cyan]")
+        
+        return {
+            'dry_run': True,
+            'question': question,
+            'default': default,
+            'simulated_response': simulated_response,
+            'preview': preview,
+            'msg': 'Dry run preview for user input'
+        }
 
 
 class CompleteTool(AutomationTool):
@@ -42,7 +62,7 @@ class CompleteTool(AutomationTool):
         """Initialize with AutomationContext."""
         self.context = context
 
-    def __call__(self, message: str = "Task completed successfully"):
+    def _execute(self, message: str = "Task completed successfully"):
         """Signal that the automation task has completed successfully."""
         if self.context.console:
             self.context.console.print(f"[green]✓ {message}[/green]")
@@ -50,6 +70,19 @@ class CompleteTool(AutomationTool):
             print(f"✓ {message}")
         
         raise CompletionException(message)
+    
+    def _dry_run_preview(self, message: str = "Task completed successfully"):
+        """Generate dry run preview for completion."""
+        preview = f"[DRY RUN] Would complete with message: '{message}'"
+        self.context.console.print(f"[green]{preview}[/green]")
+        
+        return {
+            'dry_run': True,
+            'message': message,
+            'preview': preview,
+            'would_complete': True,
+            'msg': 'Dry run preview for completion'
+        }
 
 
 class ImpossibleTool(AutomationTool):
@@ -62,7 +95,7 @@ class ImpossibleTool(AutomationTool):
         """Initialize with AutomationContext."""
         self.context = context
 
-    def __call__(self, reason: str = "Task cannot be completed"):
+    def _execute(self, reason: str = "Task cannot be completed"):
         """Signal that the automation task is impossible."""
         if self.context.console:
             self.context.console.print(f"[red]✗ {reason}[/red]")
@@ -70,6 +103,19 @@ class ImpossibleTool(AutomationTool):
             print(f"✗ {reason}")
         
         raise ImpossibleException(reason)
+    
+    def _dry_run_preview(self, reason: str = "Task cannot be completed"):
+        """Generate dry run preview for impossibility."""
+        preview = f"[DRY RUN] Would exit with error: '{reason}'"
+        self.context.console.print(f"[red]{preview}[/red]")
+        
+        return {
+            'dry_run': True,
+            'reason': reason,
+            'preview': preview,
+            'would_exit': True,
+            'msg': 'Dry run preview for impossibility'
+        }
 
 
 class DebugTool(AutomationTool):
@@ -82,12 +128,25 @@ class DebugTool(AutomationTool):
         """Initialize with AutomationContext."""
         self.context = context
 
-    def __call__(self, message: str):
+    def _execute(self, message: str):
         """Print debug message during automation."""
         if self.context.console:
             self.context.console.print(f"[dim]DEBUG: {message}[/dim]")
         else:
             print(f"DEBUG: {message}")
+        return {'msg': message, 'debug': True}
+    
+    def _dry_run_preview(self, message: str):
+        """Generate dry run preview for debug message."""
+        preview = f"[DRY RUN] Would print debug: '{message}'"
+        self.context.console.print(f"[cyan]{preview}[/cyan]")
+        
+        return {
+            'dry_run': True,
+            'message': message,
+            'preview': preview,
+            'msg': 'Dry run preview for debug'
+        }
 
 
 def get_builtin_tools() -> Dict[str, callable]:
