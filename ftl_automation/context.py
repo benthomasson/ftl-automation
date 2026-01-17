@@ -3,6 +3,8 @@ Automation context and state management.
 """
 
 import inspect
+import os
+import glob
 from typing import Dict, Any, Optional, List
 from rich.console import Console
 from rich.table import Table
@@ -49,10 +51,10 @@ class AutomationContext:
         inventory_file: Optional[str] = None,
         tool_packages: Optional[List[str]] = None,
         dry_run: bool = False,
+        auto_discover_modules: bool = False,
         **kwargs,
     ):
         self.inventory = inventory
-        self.modules = modules
         self._tools_dict = tools
         self.tools = ToolsProxy(tools, self)  # Enable ftl.tools.tool_name syntax
         self.localhost = localhost
@@ -64,6 +66,15 @@ class AutomationContext:
         self.dry_run = dry_run
         self.gate_cache = {}
         self.use_gate = kwargs.get("use_gate", False)
+        
+        # Handle module discovery and path resolution AFTER console is initialized
+        if auto_discover_modules:
+            discovered_modules = self._discover_modules()
+            all_modules = modules or []
+            all_modules.extend(discovered_modules)
+            self.modules = self._resolve_module_paths(all_modules)
+        else:
+            self.modules = self._resolve_module_paths(modules or [])
 
         # Store additional context variables
         for key, value in kwargs.items():
@@ -496,6 +507,63 @@ class AutomationContext:
         self.console.print("  [green]ftl.help(category='file')[/green] - Show all tools in a category")
         self.console.print("  [green]ftl.show_tools()[/green]         - Show tools in a formatted table")
         self.console.print("  [green]ftl.show_tools(detailed=True)[/green] - Show tools with parameter details")
+
+    def _discover_modules(self) -> List[str]:
+        """Auto-discover modules in common locations.
+        
+        Returns:
+            List of discovered module directory paths
+        """
+        search_patterns = [
+            './modules',                    # Current directory
+            '../*/modules',                 # Sibling project modules  
+            '../../*/modules',              # Parent level projects
+            os.path.expanduser('~/.ftl/modules'),  # User modules directory
+        ]
+        
+        discovered = []
+        
+        for pattern in search_patterns:
+            try:
+                # Use glob to find matching directories
+                matches = glob.glob(pattern)
+                for match in matches:
+                    if os.path.isdir(match):
+                        abs_path = os.path.abspath(match)
+                        if abs_path not in discovered:
+                            discovered.append(abs_path)
+                            self.console.print(f"[dim]Discovered modules: {abs_path}[/dim]")
+            except Exception as e:
+                # Silently continue if pattern fails
+                self.console.print(f"[yellow]Warning: Module discovery pattern failed: {pattern} - {e}[/yellow]")
+                continue
+        
+        return discovered
+    
+    def _resolve_module_paths(self, module_paths: List[str]) -> List[str]:
+        """Convert relative paths to absolute paths and validate existence.
+        
+        Args:
+            module_paths: List of module path strings
+            
+        Returns:
+            List of validated absolute paths
+        """
+        resolved = []
+        
+        for path in module_paths:
+            try:
+                abs_path = os.path.abspath(path)
+                if os.path.exists(abs_path) and os.path.isdir(abs_path):
+                    resolved.append(abs_path)
+                    self.console.print(f"[dim]Using modules: {abs_path}[/dim]")
+                else:
+                    self.console.print(f"[yellow]Warning: Module path not found or not a directory: {path}[/yellow]")
+            except Exception as e:
+                self.console.print(f"[yellow]Warning: Error resolving module path {path}: {e}[/yellow]")
+                continue
+        
+        return resolved
 
     def cleanup(self):
         """Cleanup resources."""

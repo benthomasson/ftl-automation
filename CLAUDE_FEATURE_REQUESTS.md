@@ -4,22 +4,22 @@ Based on real-world usage of ftl-automation and ftl-tools for complex automation
 
 ## Implementation Status
 
-**✅ COMPLETED** (4/10):
+**✅ COMPLETED** (5/10):
 - ✅ **Better Tool Discovery** - `list_available_tools()` and `show_tools()` methods implemented
 - ✅ **Tool Documentation Integration** - Comprehensive `help()` system with examples and parameter tables  
 - ✅ **Dry Run Mode** - Comprehensive implementation with context/operation-level control and universal tool support
 - ✅ **Consistent Parameter Naming** - File operations standardized across all tools
+- ✅ **Better Module Path Handling** - Auto-discovery with search patterns and path resolution
 
 **🚧 PARTIALLY COMPLETED** (0/10):
 - (No partially completed features remaining)
 
-**📋 PENDING** (6/10):
+**📋 PENDING** (5/10):
 - 📋 **Better Error Handling for Missing Files** - Medium priority
 - 📋 **Inventory Management Helpers** - Medium priority
 - 📋 **Parameter Validation & Error Messages** - Low priority (runtime validation for typos)
 - 📋 **Tool Chaining/Pipeline Support** - Low priority
 - 📋 **Tool Parameter Auto-completion** - Low priority
-- 📋 **Better Module Path Handling** - Low priority
 
 ## 1. Parameter Validation & Error Messages
 
@@ -334,52 +334,63 @@ class AutomationTool:
 ## 10. Better Module Path Handling
 
 **Priority**: Low  
-**Status**: 📋 **PENDING** - Not yet implemented
+**Status**: ✅ **COMPLETED** - Auto-discovery and path resolution implemented
 **Problem**: Hardcoded relative module paths are fragile and break when run from different directories.
 
-**Current Problem**:
-```python
-modules=["../minecraft-world7/modules"]  # Fragile relative path
-```
-
-**Proposed Solution**: Add module discovery with multiple search strategies:
+**✅ IMPLEMENTED SOLUTION**: Module auto-discovery with intelligent search patterns:
 
 ```python
-class AutomationContext:
-    def __init__(self, modules=None, auto_discover_modules=False, **kwargs):
-        if auto_discover_modules:
-            discovered_modules = self._discover_modules()
-            modules = modules or []
-            modules.extend(discovered_modules)
-        
-        self.modules = self._resolve_module_paths(modules or [])
-    
-    def _discover_modules(self):
-        """Auto-discover modules in common locations"""
-        search_paths = [
-            './modules',              # Current directory
-            '../*/modules',           # Sibling project modules
-            '../../*/modules',        # Parent level projects
-            os.path.expanduser('~/.ftl/modules'),  # User modules
-        ]
-        
-        found_modules = []
-        for pattern in search_paths:
-            found_modules.extend(glob.glob(pattern))
-        
-        return found_modules
-    
-    def _resolve_module_paths(self, module_paths):
-        """Convert relative paths to absolute paths"""
-        resolved = []
-        for path in module_paths:
-            abs_path = os.path.abspath(path)
-            if os.path.exists(abs_path):
-                resolved.append(abs_path)
-            else:
-                self.console.print(f"[yellow]Warning: Module path not found: {path}[/yellow]")
-        return resolved
+# Enable auto-discovery
+with ftl_automation.automation(
+    inventory="inventory.yml",
+    auto_discover_modules=True,  # Automatically find modules
+    tools=["bash", "copy"]
+) as ftl:
+    # Automatically discovers modules from:
+    # - ./modules (current directory)
+    # - ../*/modules (sibling projects)  
+    # - ../../*/modules (parent projects)
+    # - ~/.ftl/modules (user modules)
+    pass
+
+# Combine manual + auto-discovery
+with ftl_automation.automation(
+    modules=["./custom_modules"],  # Manual modules
+    auto_discover_modules=True,    # Plus auto-discovery
+    tools=["bash"]
+) as ftl:
+    # Uses both manual and discovered modules
+    pass
 ```
+
+**✅ FEATURES IMPLEMENTED**:
+- **Auto-discovery patterns**: Searches common locations for module directories
+- **Path resolution**: Converts relative paths to absolute paths with validation
+- **Multi-project support**: Finds modules from related projects automatically
+- **Fallback handling**: Graceful warnings for missing paths
+- **Combined mode**: Manual modules + auto-discovery
+
+**✅ IMPLEMENTATION**:
+```python
+def _discover_modules(self) -> List[str]:
+    search_patterns = [
+        './modules',                    # Current directory
+        '../*/modules',                 # Sibling project modules  
+        '../../*/modules',              # Parent level projects
+        os.path.expanduser('~/.ftl/modules'),  # User modules
+    ]
+    # Auto-discovery with glob patterns and validation
+
+def _resolve_module_paths(self, module_paths: List[str]) -> List[str]:
+    # Convert to absolute paths and validate existence
+    # Provides helpful warnings for missing directories
+```
+
+**✅ BENEFITS ACHIEVED**:
+- No more hardcoded relative paths like `../minecraft-world7/modules`
+- Works from any directory in project structure
+- Automatically finds modules from related projects
+- Eliminates fragile path dependencies
 
 ## Implementation Priority
 
@@ -393,18 +404,18 @@ class AutomationContext:
 6. **Inventory Management Helpers** - 📋 **PENDING** - Reduces boilerplate  
 7. ~~**Enhanced Tool Discovery**~~ - ✅ **COMPLETED** - `list_available_tools()` and `show_tools()`
 
-### 📋 Phase 3 (Low Priority - Nice to Have) - PENDING
-8. **Parameter Validation & Error Messages** - 📋 **PENDING** - Runtime validation for typos (downgraded from high priority)
-9. **Tool Chaining/Pipeline Support** - 📋 **PENDING** - Advanced workflows
-10. **Parameter Auto-completion** - 📋 **PENDING** - Polish
-11. **Better Module Discovery** - 📋 **PENDING** - Convenience
+### 📋 Phase 3 (Low Priority - Nice to Have) - PARTIALLY COMPLETE
+8. ~~**Better Module Discovery**~~ - ✅ **COMPLETED** - Auto-discovery with search patterns
+9. **Parameter Validation & Error Messages** - 📋 **PENDING** - Runtime validation for typos (downgraded from high priority)
+10. **Tool Chaining/Pipeline Support** - 📋 **PENDING** - Advanced workflows
+11. **Parameter Auto-completion** - 📋 **PENDING** - Polish
 
 ### 🎯 Next Recommended Implementation
 **Medium Priority**: **Better Error Handling for Missing Files** - Would improve debugging experience by providing helpful suggestions when file operations fail due to missing source files.
 
 ## Impact Assessment
 
-### ✅ **Progress So Far (4/10 features completed)**:
+### ✅ **Progress So Far (5/10 features completed)**:
 **BEFORE** (painful experience):
 - ❌ Trial and error with cryptic parameter failures (`mkdir(name=...)` vs `mkdir(path=...)`)
 - ❌ Manual parameter lookup in source code  
@@ -418,13 +429,14 @@ class AutomationContext:
 - ✅ **Tool discovery** - `ftl.show_tools()` reveals available tools by category
 - ✅ **Runtime documentation** - No need to check source code for parameter names
 - ✅ **Comprehensive dry run mode** - `--dry-run` flag enables safe preview of all operations
+- ✅ **Automatic module discovery** - `auto_discover_modules=True` finds modules from related projects
 
-### 📋 **Still To Address (6/10 remaining)**:
+### 📋 **Still To Address (5/10 remaining)**:
 - 📋 File operation error debugging → Better error messages needed
 - 📋 Repetitive cloud provisioning patterns → Inventory helpers needed  
 - 📋 Runtime parameter typo validation → Low priority due to consistent naming
 - 📋 Advanced workflow patterns → Tool chaining/pipeline support needed  
-- 📋 Development convenience features → Parameter auto-completion and better module discovery
+- 📋 Development convenience features → Parameter auto-completion
 
 ### 🎯 **Next High Impact**: 
 **Better Error Handling for Missing Files** would improve the debugging experience by providing helpful suggestions when file operations fail, reducing trial-and-error debugging for copy/template operations.

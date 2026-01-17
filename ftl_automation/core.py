@@ -61,6 +61,7 @@ def automation(
     secrets: Optional[List[str]] = None,
     user_input: Optional[str] = None,
     dry_run: bool = False,
+    auto_discover_modules: bool = False,
     **kwargs
 ):
     """
@@ -74,6 +75,7 @@ def automation(
         extra_vars: Additional variables
         secrets: List of secret names to load from environment
         dry_run: Enable dry run mode (preview changes without executing)
+        auto_discover_modules: Automatically discover module directories in common locations
         user_input: Path to user input file
         **kwargs: Additional context variables
 
@@ -95,8 +97,8 @@ def automation(
         inventory_file_path = None
         inv = inventory
 
-    # Load modules
-    mods = load_modules(modules or ["modules"])
+    # Note: Modules will be handled in AutomationContext with auto-discovery
+    # We pass modules to the context which will handle discovery and resolution
 
     # Load secrets from environment
     secrets_dict = {}
@@ -114,10 +116,10 @@ def automation(
     thread = Thread(target=loop.run_forever, daemon=True)
     thread.start()
 
-    # Create context first (without tools)
+    # Create context first (without tools) - it will handle module discovery
     context = AutomationContext(
         inventory=inv,
-        modules=mods,
+        modules=modules or ["modules"],
         tools={},  # Start empty, will add tools after context creation
         localhost=ftl.localhost,
         extra_vars=extra_vars or {},
@@ -126,6 +128,7 @@ def automation(
         inventory_file=inventory_file_path,
         tool_packages=tool_packages,
         dry_run=dry_run,
+        auto_discover_modules=auto_discover_modules,
         gate_cache=gate_cache,
         loop=loop,
         **kwargs
