@@ -1,21 +1,36 @@
 # FTL Automation
 
-A pure Python automation library built on Faster Than Light, extracted from ftl-automation-agent without AI dependencies.
+An **AI-first** automation library built on Faster Than Light, specifically designed for Claude and other coding agents to perform infrastructure automation tasks.
 
 ## Overview
 
-FTL Automation provides a simple, clean interface for infrastructure automation tasks. It combines the power of FTL's automation engine with an intuitive Python API for provisioning infrastructure, configuring systems, and managing automation workflows.
+FTL Automation provides a simple, clean interface optimized for AI agents to perform complex infrastructure automation. The library is designed with Claude Code as the primary user in mind, offering an intuitive Python API that allows AI assistants to provision infrastructure, configure systems, and manage automation workflows through natural conversation.
+
+### AI-First Design Philosophy
+
+- **Designed for Claude**: The primary user is expected to be Claude Code and other AI coding assistants
+- **Conversational Automation**: AI agents can translate user requests into working infrastructure code
+- **Context-Aware**: Built to work seamlessly within AI coding sessions and automation workflows
+- **Self-Documenting**: Clear APIs that AI agents can understand and use effectively
 
 ## Features
 
-- **Pure Python**: No AI or agent framework dependencies  
+### AI-Optimized Capabilities
+- **Agent-Friendly**: Designed specifically for Claude Code and AI coding assistants
+- **Natural Language to Code**: AI agents can translate user requests into working automation
+- **Context-Aware Execution**: Seamless integration with AI coding sessions
+- **Intelligent Defaults**: Sensible defaults that reduce cognitive load on AI agents
+
+### Core Infrastructure Features
+- **Pure Python**: No AI or agent framework dependencies - clean integration
 - **FTL Integration**: Built on the proven Faster Than Light automation engine
-- **Direct Tool Calling**: Clean `ftl.tool_name()` syntax for all operations
+- **Direct Tool Calling**: Clean `ftl.tool_name()` syntax optimized for AI understanding
 - **Comprehensive Tools**: Full suite of automation tools for system management
-- **Infrastructure Provisioning**: Built-in support for cloud providers like Linode
-- **Secrets Management**: Secure environment variable loading
+- **Module Auto-Discovery**: Automatically finds and loads modules from related projects
+- **Infrastructure Provisioning**: Built-in support for cloud providers (AWS, Linode)
+- **Secrets Management**: Secure environment variable loading without hardcoded credentials
 - **Inventory Management**: Automatic inventory file creation and updates
-- **Rich Output**: Beautiful console output and progress tracking
+- **Rich Output**: Beautiful console output and progress tracking for debugging
 
 ## Installation
 
@@ -26,7 +41,7 @@ pip install -e .
 
 ## Quick Start
 
-Here's a complete example that provisions a server, configures it, and sends a notification:
+Here's a complete example that Claude Code would write to provision a server, configure it, and send a notification when a user requests "Set up a web server on Linode":
 
 ```python
 #!/usr/bin/env python3
@@ -96,7 +111,11 @@ FTL Automation includes a comprehensive suite of tools for system management:
 ### System Configuration
 - `swapfile(location, size, permanent)` - Create and manage swap files
 
-### Communication
+### AWS Cloud Services (via ftl-aws-tools)
+- `kms_key(alias, description, policy)` - Manage AWS KMS encryption keys
+- Additional AWS tools available through ftl-aws-tools integration
+
+### Communication  
 - `slack(msg, channel)` - Send Slack notifications
 
 ## Key Concepts
@@ -111,12 +130,24 @@ FTL Automation includes a comprehensive suite of tools for system management:
 - **No Hardcoding**: Credentials never appear in code
 - **Multiple Providers**: Support for various cloud provider tokens
 
-### Module System
+### Module System & Auto-Discovery
 - **FTL Modules**: Built on proven Faster Than Light automation modules
-- **Ansible Compatible**: Uses Ansible-compatible modules under the hood
-- **Extensible**: Easy to add custom modules
+- **Ansible Compatible**: Uses Ansible-compatible modules (including AnsibleAWSModule)
+- **Auto-Discovery**: Automatically finds modules from related projects in `../*/modules/`
+- **Multi-Project Support**: Works seamlessly across ftl-automation, aws-automation, ftl-tools
+- **Extensible**: Easy to add custom modules and tool packages
 
-## Use Cases
+## AI Agent Use Cases
+
+### What Claude Code Can Do With FTL Automation
+
+- **"Create a web server"**: Claude provisions cloud infrastructure, configures services, and secures access
+- **"Set up monitoring"**: Claude deploys monitoring tools, configures alerts, and sets up dashboards  
+- **"Deploy my app"**: Claude handles the entire deployment pipeline from infrastructure to application
+- **"Secure my servers"**: Claude implements security best practices, hardens SSH, configures firewalls
+- **"Scale my infrastructure"**: Claude adds servers, load balancers, and configures auto-scaling
+
+### Traditional Use Cases (for human developers)
 
 - **Infrastructure Provisioning**: Spin up cloud servers and configure them
 - **System Configuration**: Manage services, users, and system settings  
@@ -126,12 +157,30 @@ FTL Automation includes a comprehensive suite of tools for system management:
 
 ## Getting Started
 
+### For AI Agents (Claude Code)
+1. **Context**: AI agents can use FTL Automation directly in coding sessions
+2. **Natural Requests**: Users can request infrastructure in natural language
+3. **Code Generation**: AI generates working automation code using the FTL API
+4. **Execution**: Code runs immediately with proper error handling and feedback
+
+### For Human Developers  
 1. **Install**: `pip install -e .` 
-2. **Set secrets**: Export required environment variables (e.g., `LINODE_TOKEN`)
+2. **Set secrets**: Export required environment variables (e.g., `LINODE_TOKEN`, `AWS_PROFILE`)
 3. **Write script**: Use the example above as a starting point
 4. **Run**: Execute your Python script
 
-FTL Automation makes infrastructure automation simple, reliable, and maintainable.
+## AI-First Architecture
+
+FTL Automation is specifically designed to be the foundation for AI-driven infrastructure automation. Whether you're Claude Code helping a user deploy applications, or a human developer building automation scripts, FTL Automation provides the reliable, clean interface needed to turn infrastructure requirements into working code.
+
+### Key AI-Friendly Design Patterns
+- **Declarative Syntax**: `ftl.tool_name()` calls that clearly express intent
+- **Intelligent Defaults**: Sensible defaults that work out of the box
+- **Clear Error Messages**: Detailed feedback that helps AI agents debug issues  
+- **Modular Design**: Tools can be combined naturally to build complex workflows
+- **State Management**: Automatic inventory and secrets handling
+
+FTL Automation makes infrastructure automation simple, reliable, and maintainable - whether you're an AI agent or a human developer.
 
 ## License
 
