@@ -94,10 +94,9 @@ def automation(
         inventory_file_path = inventory
         inv = load_inventory(inventory)
     elif inventory is None:
-        # Use FTL's localhost inventory for local AWS modules
-        from faster_than_light import localhost
+        # No inventory needed for local AWS modules
         inventory_file_path = None
-        inv = localhost
+        inv = None
     else:
         inventory_file_path = None
         inv = inventory

@@ -51,6 +51,7 @@ def load_tools_by_name(
 
             except ImportError as e:
                 # Continue to next package
+                print(f"ImportError on package {package}: {e}")
                 continue
         
         if not tool_found:
