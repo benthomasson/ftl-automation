@@ -53,7 +53,7 @@ def load_modules(module_paths: List[str]) -> List[str]:
 
 @contextmanager
 def automation(
-    inventory: str,
+    inventory: Optional[str] = None,
     modules: Optional[List[str]] = None,
     tools: Optional[List[str]] = None,
     tool_packages: Optional[List[str]] = None,
@@ -93,6 +93,11 @@ def automation(
     if isinstance(inventory, str):
         inventory_file_path = inventory
         inv = load_inventory(inventory)
+    elif inventory is None:
+        # Use FTL's localhost inventory for local AWS modules
+        from faster_than_light import localhost
+        inventory_file_path = None
+        inv = localhost
     else:
         inventory_file_path = None
         inv = inventory
