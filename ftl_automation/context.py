@@ -93,8 +93,15 @@ class AutomationContext:
         )
 
     def run_module(self, module_name: str, **module_args):
-        """Execute an FTL module."""
+        """Execute an FTL module on remote hosts - requires inventory."""
         from .core import run_module
+        
+        if self.inventory is None:
+            raise ValueError(
+                "run_module() requires an inventory to target remote hosts. "
+                "Use run_module_locally() for AWS modules that run locally via boto3, "
+                "or provide an inventory file for remote execution."
+            )
 
         return run_module(
             self.inventory,
@@ -107,11 +114,15 @@ class AutomationContext:
         )
 
     def run_module_locally(self, module_name: str, **module_args):
-        """Execute an FTL module."""
+        """Execute an FTL module locally - safe for AWS modules using boto3."""
         from .core import run_module
+        from faster_than_light import localhost
+        
+        # Always use FTL localhost for local module execution
+        local_inventory = self.localhost if self.localhost is not None else localhost
 
         return run_module(
-            self.localhost,
+            local_inventory,
             self.modules,
             module_name,
             module_args,
