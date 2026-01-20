@@ -106,6 +106,20 @@ class AutomationContext:
             dry_run=self.dry_run,
         )
 
+    def run_module_locally(self, module_name: str, **module_args):
+        """Execute an FTL module."""
+        from .core import run_module
+
+        return run_module(
+            self.localhost,
+            self.modules,
+            module_name,
+            module_args,
+            gate_cache=self.gate_cache,
+            use_gate=self.use_gate,
+            dry_run=self.dry_run,
+        )
+
     def print(self, *args, **kwargs):
         """Print to the console."""
         self.console.print(*args, **kwargs)
